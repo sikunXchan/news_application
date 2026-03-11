@@ -99,7 +99,7 @@ const App = () => {
     <div className="app-container">
       <header className="header">
         <div className="header-branding">
-          <h1 className="header-title">The Daily TL;DR</h1>
+          <h1 className="header-title">LILY AI NEWS</h1>
           <span className="header-date">{currentDate} • {totalReadTime}m total</span>
         </div>
         <div className="header-actions">
