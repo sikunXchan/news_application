@@ -58,7 +58,7 @@ const NewsCard = ({ news, index }) => {
             onClick={() => setIsEli5(!isEli5)}
           >
             <BrainCircuit size={16} />
-            {isEli5 ? 'Show Original Summary' : 'AI: Explain Like I\'m 5'}
+            {isEli5 ? '戻る' : 'AI解説'}
           </button>
         )}
 
@@ -99,7 +99,7 @@ const App = () => {
     <div className="app-container">
       <header className="header">
         <div className="header-branding">
-          <h1 className="header-title">The Daily TL;DR</h1>
+          <h1 className="header-title">LILY AI NEWS</h1>
           <span className="header-date">{currentDate} • {totalReadTime}m total</span>
         </div>
         <div className="header-actions">
