@@ -58,7 +58,7 @@ const NewsCard = ({ news, index }) => {
             onClick={() => setIsEli5(!isEli5)}
           >
             <BrainCircuit size={16} />
-            {isEli5 ? 'Show Original Summary' : 'AI: Explain Like I\'m 5'}
+            {isEli5 ? '戻す' : 'AI解説'}
           </button>
         )}
 
