@@ -16,11 +16,18 @@ const categories = [
 const NewsCard = ({ news, index }) => {
   const [isEli5, setIsEli5] = useState(false);
   const summaryToDisplay = isEli5 && news.eli5Summary ? news.eli5Summary : news.summary;
+  const getImageForVibe = (vibe) => {
+    if (vibe === 'positive') return '/positive_news_dog.jpg';
+    if (vibe === 'negative' || vibe === 'alert') return '/negative_news_dog.jpg';
+    return '/neutral_news_dog.jpg';
+  };
+
+  const imageSrc = getImageForVibe(news.vibe);
 
   return (
     <article className="news-card" style={{ animationDelay: `${index * 0.1}s` }}>
       <div className="card-image-container">
-        <img src={news.imageUrl} alt={news.title} className="card-image" />
+        <img src={imageSrc} alt={news.title} className="card-image" />
         <div className="vibe-overlay"></div>
         <div className={`vibe-indicator vibe-${news.vibe}`}>
           <Sparkles size={12} />
