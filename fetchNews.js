@@ -119,8 +119,8 @@ async function run() {
     try {
       const feed = await parser.parseURL(feedConfig.url);
       
-      // Get top 5 items per category to get 25 total items for a rich daily feed, all translated to Japanese
-      const topItems = feed.items.slice(0, 5); 
+      // Get top 3 items per category (15 total) for a fast daily feed
+      const topItems = feed.items.slice(0, 3); 
 
       for (const item of topItems) {
         console.log(`Processing: ${item.title}`);
@@ -129,9 +129,9 @@ async function run() {
           allNews.push(newsObj);
         }
         
-        // Critical: Delay for 15 seconds to strictly respect Gemini Free Tier Rate Limits (Max 15 RPM)
-        console.log('Waiting 15 seconds to respect API rate limits...');
-        await new Promise(r => setTimeout(r, 15000));
+        // Delay 5 seconds between API calls to respect rate limits
+        console.log('Waiting 5 seconds...');
+        await new Promise(r => setTimeout(r, 5000));
       }
     } catch (e) {
       console.error(`Error processing feed ${feedConfig.category}: ${e.message}`);
