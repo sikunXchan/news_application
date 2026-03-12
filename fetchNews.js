@@ -22,7 +22,8 @@ const FEEDS = [
   { category: 'business', url: 'https://feeds.bbci.co.uk/news/business/rss.xml' },
   { category: 'world', url: 'https://feeds.bbci.co.uk/news/world/rss.xml' },
   { category: 'science', url: 'https://feeds.bbci.co.uk/news/science_and_environment/rss.xml' },
-  { category: 'entertainment', url: 'https://feeds.bbci.co.uk/news/entertainment_and_arts/rss.xml' }
+  { category: 'entertainment', url: 'https://feeds.bbci.co.uk/news/entertainment_and_arts/rss.xml' },
+  { category: 'it-learning', url: 'https://dev.to/feed' }
 ];
 
 // Helper to determine approximate read time simply
@@ -92,7 +93,7 @@ async function processNewsItem(item, category, id) {
       id: id.toString(),
       category: category,
       title: parsedAiData.title || item.title,
-      source: 'BBC News', // We are using BBC as the source for all for simplicity in this demo
+      source: category === 'it-learning' ? 'DEV Community' : 'BBC News', // DEV for IT learning, otherwise BBC
       timeAgo: 'Today', // Simplifying time
       imageUrl: item.enclosure?.url || 'https://images.unsplash.com/photo-1585829365295-ab7cd400c167?auto=format&fit=crop&q=80&w=1000',
       readTime: estimateReadTime(item.content),
@@ -129,9 +130,9 @@ async function run() {
           allNews.push(newsObj);
         }
         
-        // Delay 5 seconds between API calls to respect rate limits
-        console.log('Waiting 5 seconds...');
-        await new Promise(r => setTimeout(r, 5000));
+        // Delay 8 seconds between API calls to respect rate limits
+        console.log('Waiting 8 seconds...');
+        await new Promise(r => setTimeout(r, 8000));
       }
     } catch (e) {
       console.error(`Error processing feed ${feedConfig.category}: ${e.message}`);

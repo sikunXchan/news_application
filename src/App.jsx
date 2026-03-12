@@ -11,6 +11,7 @@ const categories = [
   { id: 'world', label: 'World' },
   { id: 'science', label: 'Science' },
   { id: 'entertainment', label: 'Entertainment' },
+  { id: 'it-learning', label: 'IT Learning' },
 ];
 
 const NewsCard = ({ news, index }) => {
