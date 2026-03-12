@@ -139,6 +139,11 @@ async function run() {
   }
 
   // Save to src directory so React can import it directly
+  if (allNews.length === 0) {
+    console.error('Error: No news items were successfully processed. This might be due to a blocked/leaked API key or rate limiting.');
+    process.exit(1);
+  }
+
   const outputPath = path.join(process.cwd(), 'src', 'dailyNews.json');
   fs.writeFileSync(outputPath, JSON.stringify(allNews, null, 2), 'utf8');
   console.log(`Successfully generated ${allNews.length} news items to ${outputPath}`);
