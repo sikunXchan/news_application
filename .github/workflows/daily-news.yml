@@ -15,6 +15,9 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: main
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -35,6 +38,15 @@ jobs:
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
           git add src/dailyNews.json
-          git diff --quiet && git diff --staged --quiet || git commit -m "chore: Daily AI news update $(date -u +'%Y-%m-%d')"
-          git pull --rebase origin main
-          git push
+          # Only commit if there are actual changes
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+            exit 0
+          fi
+          git commit -m "chore: Daily AI news update $(date -u +'%Y-%m-%d')"
+          # Pull latest changes and rebase, then push with retry
+          for i in 1 2 3; do
+            git pull --rebase origin main && git push origin main && break
+            echo "Push attempt $i failed, retrying in 5s..."
+            sleep 5
+          done
