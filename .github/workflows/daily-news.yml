@@ -7,10 +7,16 @@ on:
   workflow_dispatch: # Allows manual triggering from the GitHub UI
 
 permissions:
-  contents: write # Needed to push the generated JSON back to the repo and deploy
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
 
 jobs:
-  fetch-and-deploy:
+  fetch-news:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
@@ -19,7 +25,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'npm'
 
       - name: Install Dependencies
@@ -35,15 +41,24 @@ jobs:
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
           git add src/dailyNews.json
-          # Commit only if there are changes
-          git diff --quiet && git diff --staged --quiet || git commit -m "chore: Daily AI news update"
+          git diff --quiet && git diff --staged --quiet || git commit -m "chore: Daily AI news update $(date -u +'%Y-%m-%d')"
           git push
 
       - name: Build React App
         run: npm run build
 
-      - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
+      - name: Upload Pages Artifact
+        uses: actions/upload-pages-artifact@v3
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./dist
+          path: ./dist
+
+  deploy:
+    needs: fetch-news
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
