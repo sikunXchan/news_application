@@ -1,4 +1,4 @@
-name: Daily AI News Fetch & Deploy
+name: Daily AI News Fetch
 
 on:
   schedule:
@@ -8,12 +8,6 @@ on:
 
 permissions:
   contents: write
-  pages: write
-  id-token: write
-
-concurrency:
-  group: "pages"
-  cancel-in-progress: false
 
 jobs:
   fetch-news:
@@ -36,29 +30,10 @@ jobs:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: node fetchNews.js
 
-      - name: Commit Updated News JSON
+      - name: Commit and Push Updated News
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
           git add src/dailyNews.json
           git diff --quiet && git diff --staged --quiet || git commit -m "chore: Daily AI news update $(date -u +'%Y-%m-%d')"
           git push
-
-      - name: Build React App
-        run: npm run build
-
-      - name: Upload Pages Artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: ./dist
-
-  deploy:
-    needs: fetch-news
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
