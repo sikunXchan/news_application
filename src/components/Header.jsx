@@ -1,7 +1,7 @@
 ﻿import React from 'react';
 import { 
   Search, BookmarkCheck, Sun, Moon, Sparkles, Terminal, 
-  BookOpen, SlidersHorizontal, X 
+  RotateCw, SlidersHorizontal, X, RefreshCw 
 } from 'lucide-react';
 
 export const Header = ({
@@ -12,7 +12,10 @@ export const Header = ({
   wordbookCount,
   onOpenWordbook,
   isDarkMode,
-  onToggleTheme
+  onToggleTheme,
+  onRefreshNews,
+  isRefreshing,
+  lastUpdatedTime
 }) => {
   const dateStr = new Date().toLocaleDateString('en-US', {
     weekday: 'short',
@@ -30,13 +33,25 @@ export const Header = ({
           <div className="brand-text">
             <div className="brand-title-wrap">
               <h1 className="brand-title">TechLingua</h1>
-              <span className="brand-pill">EN & DEV</span>
+              <span className="brand-pill">DAILY DEV</span>
             </div>
-            <span className="brand-date">{dateStr} • English & Tech Mastery</span>
+            <span className="brand-date">
+              {dateStr} • {lastUpdatedTime ? `Updated ${lastUpdatedTime}` : 'Daily Live Feed'}
+            </span>
           </div>
         </div>
 
         <div className="header-actions">
+          <button 
+            className={`header-tool-btn refresh-btn ${isRefreshing ? 'refreshing' : ''}`}
+            onClick={onRefreshNews}
+            title="Refresh latest news"
+            disabled={isRefreshing}
+          >
+            <RotateCw size={16} className={isRefreshing ? 'animate-spin' : ''} />
+            <span className="btn-label">{isRefreshing ? 'Updating...' : 'Refresh'}</span>
+          </button>
+
           <button 
             className="header-tool-btn wordbook-trigger"
             onClick={onOpenWordbook}

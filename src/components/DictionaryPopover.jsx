@@ -9,44 +9,53 @@ export const DictionaryPopover = ({
   wordbook,
   onToggleWordbook
 }) => {
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const clean = cleanWord(selectedWord);
+  const [data, setData] = useState(() => lookupDictionary(clean) || {
+    word: clean,
+    phonetic: '',
+    partOfSpeech: 'term',
+    meaning: '',
+    techContext: '',
+    example: ''
+  });
+  const [loading, setLoading] = useState(!lookupDictionary(clean));
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
 
-  const clean = cleanWord(selectedWord);
   const isSaved = wordbook.some(item => cleanWord(item.word) === clean);
 
   useEffect(() => {
-    if (!clean) {
-      setData(null);
+    if (!clean) return;
+
+    const localHit = lookupDictionary(clean);
+    if (localHit) {
+      setData(localHit);
       setLoading(false);
       return;
     }
 
     setLoading(true);
-    const localHit = lookupDictionary(clean);
-    if (localHit) {
-      setData(localHit);
+    let isCancelled = false;
+
+    fetchOnlineDefinition(clean).then(onlineData => {
+      if (isCancelled) return;
+      if (onlineData) {
+        setData(onlineData);
+      } else {
+        setData({
+          word: clean,
+          phonetic: '',
+          partOfSpeech: 'word',
+          meaning: `${clean}（英単語）`,
+          techContext: 'Tap audio to listen to native pronunciation.',
+          example: `Encountered in article: "${clean}"`
+        });
+      }
       setLoading(false);
-    } else {
-      // Async online fallback
-      fetchOnlineDefinition(clean).then(onlineData => {
-        if (onlineData) {
-          setData(onlineData);
-        } else {
-          // Minimal fallback
-          setData({
-            word: clean,
-            phonetic: "",
-            partOfSpeech: "term",
-            meaning: `No direct definition found for "${clean}".`,
-            techContext: "Tap audio to hear pronunciation or search documentation.",
-            example: ""
-          });
-        }
-        setLoading(false);
-      });
-    }
+    });
+
+    return () => {
+      isCancelled = true;
+    };
   }, [clean]);
 
   const handleSpeak = (e) => {
@@ -69,7 +78,7 @@ export const DictionaryPopover = ({
       word: data.word || clean,
       phonetic: data.phonetic || '',
       partOfSpeech: data.partOfSpeech || 'noun',
-      meaning: data.meaning || '',
+      meaning: data.meaning || `${clean}（英単語）`,
       techContext: data.techContext || '',
       example: data.example || '',
       savedAt: new Date().toISOString()
@@ -123,44 +132,46 @@ export const DictionaryPopover = ({
           </div>
         </div>
 
-        {loading ? (
-          <div className="popover-loading">
-            <Loader2 className="animate-spin" size={20} />
-            <span>Looking up definition...</span>
-          </div>
-        ) : (
-          <div className="popover-body">
-            {data?.meaning && (
-              <div className="popover-meaning-section">
-                <span className="section-label">Definition / 意味:</span>
-                <p className="popover-meaning">{data.meaning}</p>
-              </div>
-            )}
-
-            {data?.techContext && (
-              <div className="popover-tech-section">
-                <div className="section-title">
-                  <Code2 size={13} />
-                  <span>Tech & Programming Context</span>
-                </div>
-                <p className="popover-tech-text">{data.techContext}</p>
-              </div>
-            )}
-
-            {data?.example && (
-              <div className="popover-example-section">
-                <span className="section-label">Example:</span>
-                <p className="popover-example">"{data.example}"</p>
-              </div>
-            )}
-
-            <div className="popover-footer">
-              <span className="popover-hint">
-                💡 Long press or click any word while reading for instant definition!
-              </span>
+        <div className="popover-body">
+          {loading && !data?.meaning ? (
+            <div className="popover-loading">
+              <Loader2 className="animate-spin" size={18} />
+              <span>Looking up translation & context...</span>
             </div>
+          ) : (
+            <>
+              {data?.meaning && (
+                <div className="popover-meaning-section">
+                  <span className="section-label">Definition / 意味:</span>
+                  <p className="popover-meaning">{data.meaning}</p>
+                </div>
+              )}
+
+              {data?.techContext && (
+                <div className="popover-tech-section">
+                  <div className="section-title">
+                    <Code2 size={13} />
+                    <span>Tech & Programming Context</span>
+                  </div>
+                  <p className="popover-tech-text">{data.techContext}</p>
+                </div>
+              )}
+
+              {data?.example && (
+                <div className="popover-example-section">
+                  <span className="section-label">Example:</span>
+                  <p className="popover-example">"{data.example}"</p>
+                </div>
+              )}
+            </>
+          )}
+
+          <div className="popover-footer">
+            <span className="popover-hint">
+              💡 Tip: Tap speaker icon for audio. Tap bookmark to save to Wordbook.
+            </span>
           </div>
-        )}
+        </div>
       </div>
     </div>
   );

@@ -1,7 +1,7 @@
 ﻿import React, { useState, useEffect } from 'react';
 import { 
   Terminal, Sparkles, SlidersHorizontal, BookOpen, 
-  BookmarkCheck, Search, Info, HelpCircle 
+  BookmarkCheck, Search, Info, HelpCircle, Check 
 } from 'lucide-react';
 import dailyNewsData from './dailyNews.json';
 import { Header } from './components/Header';
@@ -28,6 +28,11 @@ export const App = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedLevel, setSelectedLevel] = useState('all'); // 'all' | 'beginner' | 'intermediate' | 'advanced'
   const [isDarkMode, setIsDarkMode] = useState(true);
+
+  // Feed & Live Update state
+  const [dailyFeed, setDailyFeed] = useState(dailyNewsData);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [lastUpdatedTime, setLastUpdatedTime] = useState('Today');
 
   // Modals and Popover states
   const [popoverWord, setPopoverWord] = useState(null);
@@ -86,6 +91,18 @@ export const App = () => {
     }
   }, [isDarkMode]);
 
+  // Refresh latest news feed simulation & timestamp update
+  const handleRefreshNews = () => {
+    setIsRefreshing(true);
+    setTimeout(() => {
+      setDailyFeed([...dailyNewsData]);
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      setLastUpdatedTime(`Today at ${timeStr}`);
+      setIsRefreshing(false);
+    }, 600);
+  };
+
   // Handle word selection from long press or click
   const handleWordSelected = (word, rect) => {
     const clean = cleanWord(word);
@@ -135,7 +152,7 @@ export const App = () => {
   };
 
   // Filter news items
-  const filteredNews = dailyNewsData.filter(item => {
+  const filteredNews = dailyFeed.filter(item => {
     // Category filter
     if (activeCategory !== 'all' && item.category !== activeCategory) {
       return false;
@@ -171,6 +188,9 @@ export const App = () => {
           onOpenWordbook={() => setIsWordbookOpen(true)}
           isDarkMode={isDarkMode}
           onToggleTheme={() => setIsDarkMode(!isDarkMode)}
+          onRefreshNews={handleRefreshNews}
+          isRefreshing={isRefreshing}
+          lastUpdatedTime={lastUpdatedTime}
         />
 
         {/* Learning Hint Banner */}
@@ -241,7 +261,7 @@ export const App = () => {
               <span>TechLingua News</span>
             </div>
             <p className="footer-desc">
-              Master cutting-edge software engineering and technical English simultaneously.
+              Master cutting-edge software engineering and technical English simultaneously. Daily automated updates via RSS & AI.
             </p>
           </div>
         </footer>

@@ -1,0 +1,39 @@
+﻿name: Daily Tech News Auto-Update
+
+on:
+  schedule:
+    # Runs daily at 21:00 UTC (06:00 JST next morning)
+    - cron: '0 21 * * *'
+  workflow_dispatch: # Allows manual trigger from GitHub UI
+
+permissions:
+  contents: write
+
+jobs:
+  update-news:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Fetch and enrich daily news via Gemini
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: node fetchNews.js
+
+      - name: Commit and push updated news
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add src/dailyNews.json
+          git diff --quiet && git diff --staged --quiet || (git commit -m "chore(data): auto-update daily tech news [skip ci]" && git push)
