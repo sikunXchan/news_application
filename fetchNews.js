@@ -13,7 +13,49 @@ if (!GEMINI_API_KEY) {
 }
 
 const ai = GEMINI_API_KEY ? new GoogleGenAI({ apiKey: GEMINI_API_KEY }) : null;
-const parser = new Parser();
+const parser = new Parser({
+  customFields: {
+    item: [
+      ['media:content', 'mediaContent', { keepArray: true }],
+      ['media:thumbnail', 'mediaThumbnail']
+    ]
+  }
+});
+
+// Distinct fallback photos so items without a real source image don't all
+// collapse into a single repeated picture. Picked per-category so the fallback
+// at least loosely matches the article's topic.
+const CATEGORY_FALLBACK_IMAGES = {
+  ai: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&q=80&w=1000',
+  web: 'https://images.unsplash.com/photo-1512054502232-10a0a035d672?auto=format&fit=crop&q=80&w=1000',
+  cloud: 'https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?auto=format&fit=crop&q=80&w=1000',
+  devops: 'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&q=80&w=1000',
+  security: 'https://images.unsplash.com/photo-1563986768609-322da13575f3?auto=format&fit=crop&q=80&w=1000',
+  career: 'https://images.unsplash.com/photo-1532996122724-e3c354a0b15b?auto=format&fit=crop&q=80&w=1000'
+};
+const DEFAULT_FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&q=80&w=1000';
+
+// Best-effort extraction of a real article image: RSS enclosure first, then
+// Media RSS tags (used by feeds like BBC), then the first <img> embedded in
+// the article's HTML body (how dev.to includes its cover image), and only
+// then a category-appropriate stock photo instead of one single hardcoded URL.
+function extractImageUrl(item, category) {
+  if (item.enclosure?.url) return item.enclosure.url;
+
+  const mediaThumbUrl = item.mediaThumbnail?.$?.url || item.mediaThumbnail?.url;
+  if (mediaThumbUrl) return mediaThumbUrl;
+
+  const mediaContentUrl = Array.isArray(item.mediaContent)
+    ? item.mediaContent.find(m => m?.$?.url)?.$?.url
+    : item.mediaContent?.$?.url;
+  if (mediaContentUrl) return mediaContentUrl;
+
+  const html = item['content:encoded'] || item.content || '';
+  const imgMatch = html.match(/<img[^>]+src=["']([^"']+)["']/i);
+  if (imgMatch) return imgMatch[1];
+
+  return CATEGORY_FALLBACK_IMAGES[category] || DEFAULT_FALLBACK_IMAGE;
+}
 
 // Tech-focused RSS feeds for English & Engineering learning
 const FEEDS = [
@@ -114,7 +156,7 @@ async function processNewsItem(item, feedConfig, id) {
       title: parsed.title || item.title,
       source: feedConfig.source,
       timeAgo: 'Today',
-      imageUrl: item.enclosure?.url || 'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&q=80&w=1000',
+      imageUrl: extractImageUrl(item, feedConfig.category),
       readTime: estimateReadTime(item.content || item.contentSnippet),
       level: parsed.level || 'Intermediate',
       tags: parsed.tags || ['#Tech', '#Engineering'],
