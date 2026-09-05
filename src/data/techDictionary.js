@@ -13,6 +13,12 @@ export const techDictionary = {
   'app': { word: 'app', phonetic: '/æp/', partOfSpeech: 'noun', meaning: 'アプリ、アプリケーション', techContext: 'ユーザー向けのソフトウェア。', example: 'The mobile app is built with React Native.' },
   'application': { word: 'application', phonetic: '/ˌæp.lɪˈkeɪ.ʃən/', partOfSpeech: 'noun', meaning: 'アプリケーション、適用', techContext: 'ソフトウェアプログラム全体。', example: 'Modern web applications use SPAs.' },
   'applications': { word: 'applications', phonetic: '/ˌæp.lɪˈkeɪ.ʃənz/', partOfSpeech: 'noun', meaning: 'アプリケーション群', techContext: '複数のアプリ。', example: 'Enterprise applications require strict security.' },
+  'development': { word: 'development', phonetic: '/dɪˈvel.əp.mənt/', partOfSpeech: 'noun', meaning: '開発、発展', techContext: 'ソフトウェアやシステムを設計・実装・改良していく一連の工程（software development）。', example: 'Agile development shortens the feedback loop between releases.' },
+  'develop': { word: 'develop', phonetic: '/dɪˈvel.əp/', partOfSpeech: 'verb', meaning: '開発する、発展させる', techContext: 'アプリケーションや機能を新たに作り上げること。', example: 'The team plans to develop a new recommendation engine.' },
+  'developer': { word: 'developer', phonetic: '/dɪˈvel.ə.pər/', partOfSpeech: 'noun', meaning: '開発者、プログラマー', techContext: 'ソフトウェアを設計・実装するエンジニア。', example: 'Full-stack developers work across the frontend and backend.' },
+  'developers': { word: 'developers', phonetic: '/dɪˈvel.ə.pərz/', partOfSpeech: 'noun', meaning: '開発者群', techContext: '複数の開発エンジニア。', example: 'Developers rely on CI/CD pipelines to ship faster.' },
+  'developing': { word: 'developing', phonetic: '/dɪˈvel.ə.pɪŋ/', partOfSpeech: 'verb', meaning: '開発している', techContext: '機能やシステムを構築中の状態。', example: 'They are developing a new AI-powered search feature.' },
+  'developed': { word: 'developed', phonetic: '/dɪˈvel.əpt/', partOfSpeech: 'verb / adjective', meaning: '開発された、開発済みの', techContext: '既に実装・完成した状態を指す。', example: 'The feature was developed and shipped within two sprints.' },
   'distributed': { word: 'distributed', phonetic: '/dɪˈstrɪb.jə.tɪd/', partOfSpeech: 'adjective', meaning: '分散型の、分散された', techContext: '複数のサーバーやノードに処理やデータを分散させるシステム設計。', example: 'Distributed systems provide high availability.' },
   'distribute': { word: 'distribute', phonetic: '/dɪˈstrɪb.juːt/', partOfSpeech: 'verb', meaning: '分散する、配布する', techContext: '負荷やデータを複数の場所に分けること。', example: 'Distribute the load across multiple servers.' },
   
@@ -210,13 +216,18 @@ export async function fetchOnlineDefinition(rawWord) {
     if (transData && transData[0] && transData[0][0] && transData[0][0][0]) {
       jaMeaning = transData[0][0][0];
     }
-    
-    // If translation failed or returned the exact same English word
+
+    // If translation failed or returned the exact same English word, fall
+    // back to the English definition. If neither source found anything
+    // usable, don't fabricate a placeholder that just echoes the word back
+    // as if it were an answer — report "not found" so the UI can be honest
+    // about it instead of showing a fake definition.
     if (!jaMeaning || jaMeaning.toLowerCase() === word.toLowerCase()) {
       if (enDef) {
         jaMeaning = `[英英] ${enDef}`;
       } else {
-        jaMeaning = `${word}（英語の語彙・用語）`;
+        memoryCache.set(word, null);
+        return null;
       }
     }
 
@@ -233,16 +244,8 @@ export async function fetchOnlineDefinition(rawWord) {
     return result;
   } catch {
     clearTimeout(timeoutId);
-    // Instant fallback if network times out
-    const fallback = {
-      word: word,
-      phonetic: '',
-      partOfSpeech: 'word',
-      meaning: `${word}（英語の語彙・用語）`,
-      techContext: 'Tap audio icon to practice pronunciation.',
-      example: `Encountered in technical text: "${word}"`
-    };
-    memoryCache.set(word, fallback);
-    return fallback;
+    // Network failure or timeout — report "not found" rather than a fake
+    // placeholder definition. Not cached, since a retry might succeed.
+    return null;
   }
 }
