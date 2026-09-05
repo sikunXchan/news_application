@@ -10,11 +10,12 @@ export const ArticleReaderModal = ({
   onClose,
   onWordSelected,
   wordbook,
-  onToggleWordbook
+  onToggleWordbook,
+  isSaved,
+  onToggleSave
 }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [showJapanese, setShowJapanese] = useState(false);
-  const [isSaved, setIsSaved] = useState(false); // mock save state for this specific screen
 
   useEffect(() => {
     setIsPlaying(false);
@@ -29,6 +30,20 @@ export const ArticleReaderModal = ({
   if (!isOpen || !news) return null;
 
   const fullTextToRead = `${news.title}. ${news.fullArticle || news.summary.join(' ')}`;
+
+  const handleShare = async (e) => {
+    e?.stopPropagation();
+    const shareData = { title: news.title, text: news.title, url: window.location.href };
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+      } else if (navigator.clipboard) {
+        await navigator.clipboard.writeText(shareData.url);
+      }
+    } catch (_) {
+      // user cancelled the share sheet or clipboard was unavailable — no-op
+    }
+  };
 
   const toggleAudio = () => {
     if (!('speechSynthesis' in window)) return;
@@ -53,8 +68,14 @@ export const ArticleReaderModal = ({
       <div className="reader-top-bar">
         <button className="icon-btn" onClick={onClose}><ArrowLeft size={24} /></button>
         <div className="reader-top-actions">
-          <button className="icon-btn"><Bookmark size={22} /></button>
-          <button className="icon-btn"><Share size={22} /></button>
+          <button
+            className={`icon-btn ${isSaved ? 'active' : ''}`}
+            onClick={onToggleSave}
+            title={isSaved ? '保存済み' : 'あとで読むに追加'}
+          >
+            <Bookmark size={22} fill={isSaved ? 'currentColor' : 'none'} />
+          </button>
+          <button className="icon-btn" onClick={handleShare} title="共有"><Share size={22} /></button>
           <button className="icon-btn"><MoreHorizontal size={22} /></button>
         </div>
       </div>
@@ -123,9 +144,9 @@ export const ArticleReaderModal = ({
           <PawPrint size={24} className="paw-icon" />
           <span>128</span>
         </div>
-        <button 
+        <button
           className={`reader-save-btn ${isSaved ? 'saved' : ''}`}
-          onClick={() => setIsSaved(!isSaved)}
+          onClick={onToggleSave}
         >
           <Bookmark size={20} fill={isSaved ? 'currentColor' : 'none'} />
           <span>{isSaved ? '保存済み' : 'あとで読む'}</span>
