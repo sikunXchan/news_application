@@ -1,4 +1,4 @@
-﻿import Parser from 'rss-parser';
+import Parser from 'rss-parser';
 import { GoogleGenAI } from '@google/genai';
 import dotenv from 'dotenv';
 import fs from 'fs';
@@ -74,7 +74,7 @@ JSON Schema:
     }
   ],
   "grammarTip": "【Grammar/Expression Pattern】: 日本語による文法やフレーズの解説と例文",
-  "fullArticle": "A 2-3 paragraph readable English article body summarizing the story with rich tech vocabulary.",
+  "fullArticle": "A comprehensive, long-form 5-8 paragraph English article diving deep into the technical details and background of the story. Use rich technical vocabulary and ensure a highly educational reading experience.",
   "quiz": {
     "question": "A multiple-choice question testing technical understanding or reading comprehension (English)",
     "options": ["Option A", "Option B", "Option C", "Option D"],
