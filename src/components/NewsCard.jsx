@@ -16,7 +16,13 @@ export const NewsCard = ({
     return (
       <article className="news-card hero-card animate-slide-up" onClick={() => onOpenReader(news)}>
         <div className="hero-image-wrap">
-          <img src={news.imageUrl} alt={news.title} className="hero-image" loading="lazy" />
+          <img 
+            src={news.imageUrl} 
+            alt={news.title} 
+            className="hero-image" 
+            loading="lazy" 
+            onError={(e) => { e.target.onerror = null; e.target.src = 'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&q=80&w=1000'; }}
+          />
           <div className="hero-gradient"></div>
           <span className="hero-new-badge">NEW</span>
           <div className="hero-content">
@@ -42,7 +48,13 @@ export const NewsCard = ({
   return (
     <article className="news-card list-card animate-slide-up" onClick={() => onOpenReader(news)}>
       <div className="list-thumbnail">
-        <img src={news.imageUrl} alt={news.title} className="list-image" loading="lazy" />
+        <img 
+          src={news.imageUrl} 
+          alt={news.title} 
+          className="list-image" 
+          loading="lazy" 
+          onError={(e) => { e.target.onerror = null; e.target.src = 'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&q=80&w=1000'; }}
+        />
       </div>
       <div className="list-body">
         <h3 className="list-title">

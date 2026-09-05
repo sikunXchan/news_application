@@ -61,7 +61,12 @@ export const ArticleReaderModal = ({
 
       <div className="reader-content-scrollable">
         <div className="reader-hero-img-box">
-          <img src={news.imageUrl} alt={news.title} className="reader-main-img" />
+          <img 
+            src={news.imageUrl} 
+            alt={news.title} 
+            className="reader-main-img"
+            onError={(e) => { e.target.onerror = null; e.target.src = 'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&q=80&w=1000'; }}
+          />
         </div>
 
         <div className="reader-body-content">
