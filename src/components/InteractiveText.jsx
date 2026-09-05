@@ -16,6 +16,10 @@ export const InteractiveText = ({
   const tokens = text.split(/(\s+|[.,!?;:()""'`[\]{}]+)/);
 
   const handleTouchStart = (e, word) => {
+    // Prevent the tap from also bubbling up to a parent card's onClick
+    // (e.g. opening the full article) while the user is just picking a word.
+    e.stopPropagation();
+
     const clean = cleanWord(word);
     if (!clean) return;
 
@@ -32,14 +36,23 @@ export const InteractiveText = ({
     }, 380); // 380ms for long press
   };
 
-  const handleTouchEnd = (e, word) => {
+  const handleTouchEnd = (e) => {
+    e.stopPropagation();
     if (touchTimerRef.current) {
       clearTimeout(touchTimerRef.current);
       touchTimerRef.current = null;
     }
+    // A long press already opened the popover via the timer above. Suppress
+    // the browser's compatibility "click" that follows touchend — otherwise
+    // it lands on the popover overlay that just appeared mid-gesture and
+    // immediately closes the popover it was meant to open.
+    if (isLongPressRef.current) {
+      e.preventDefault();
+    }
   };
 
-  const handleTouchMove = () => {
+  const handleTouchMove = (e) => {
+    e.stopPropagation();
     if (touchTimerRef.current) {
       clearTimeout(touchTimerRef.current);
       touchTimerRef.current = null;
@@ -47,6 +60,11 @@ export const InteractiveText = ({
   };
 
   const handleClick = (e, word) => {
+    // Always stop this from bubbling to a parent card's onClick — a tap on a
+    // word should only ever trigger the dictionary lookup, never also open
+    // the article underneath it.
+    e.stopPropagation();
+
     // If long press already triggered on mobile, avoid double action
     if (isLongPressRef.current) {
       isLongPressRef.current = false;
@@ -75,7 +93,7 @@ export const InteractiveText = ({
             key={idx}
             className={`interactive-word ${isHighlighted ? 'highlight-keyword' : ''}`}
             onTouchStart={(e) => handleTouchStart(e, token)}
-            onTouchEnd={(e) => handleTouchEnd(e, token)}
+            onTouchEnd={handleTouchEnd}
             onTouchMove={handleTouchMove}
             onClick={(e) => handleClick(e, token)}
             title="Long press or tap for Tech English definition"

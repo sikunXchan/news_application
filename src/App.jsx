@@ -198,6 +198,8 @@ export const App = () => {
             onWordSelected={handleWordSelected}
             wordbook={wordbook}
             onToggleWordbook={handleToggleWordbook}
+            isSaved={savedArticles.some(a => a.id === activeReaderNews.id)}
+            onToggleSave={() => handleToggleSaveArticle(activeReaderNews)}
           />
         )}
 
