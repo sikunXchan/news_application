@@ -20,6 +20,7 @@ export const DictionaryPopover = ({
   });
   const [loading, setLoading] = useState(!lookupDictionary(clean));
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
+  const [notFound, setNotFound] = useState(false);
 
   const isSaved = wordbook.some(item => cleanWord(item.word) === clean);
 
@@ -29,26 +30,25 @@ export const DictionaryPopover = ({
     const localHit = lookupDictionary(clean);
     if (localHit) {
       setData(localHit);
+      setNotFound(false);
       setLoading(false);
       return;
     }
 
     setLoading(true);
+    setNotFound(false);
     let isCancelled = false;
 
     fetchOnlineDefinition(clean).then(onlineData => {
       if (isCancelled) return;
       if (onlineData) {
         setData(onlineData);
+        setNotFound(false);
       } else {
-        setData({
-          word: clean,
-          phonetic: '',
-          partOfSpeech: 'word',
-          meaning: `${clean}（英単語）`,
-          techContext: 'Tap audio to listen to native pronunciation.',
-          example: `Encountered in article: "${clean}"`
-        });
+        // Neither the local dictionary nor the online lookup found a real
+        // definition — say so plainly rather than showing a fake one.
+        setData(null);
+        setNotFound(true);
       }
       setLoading(false);
     });
@@ -73,12 +73,12 @@ export const DictionaryPopover = ({
 
   const handleSaveToggle = (e) => {
     e?.stopPropagation();
-    if (!data) return;
+    if (!data?.meaning) return;
     onToggleWordbook({
       word: data.word || clean,
       phonetic: data.phonetic || '',
       partOfSpeech: data.partOfSpeech || 'noun',
-      meaning: data.meaning || `${clean}（英単語）`,
+      meaning: data.meaning,
       techContext: data.techContext || '',
       example: data.example || '',
       savedAt: new Date().toISOString()
@@ -119,10 +119,11 @@ export const DictionaryPopover = ({
             >
               <Volume2 size={16} />
             </button>
-            <button 
+            <button
               className={`popover-btn save-btn ${isSaved ? 'saved' : ''}`}
               onClick={handleSaveToggle}
-              title={isSaved ? "Remove from Wordbook" : "Save to Wordbook"}
+              disabled={!data?.meaning}
+              title={!data?.meaning ? "No definition to save" : isSaved ? "Remove from Wordbook" : "Save to Wordbook"}
             >
               {isSaved ? <BookmarkCheck size={16} /> : <Bookmark size={16} />}
             </button>
@@ -137,6 +138,11 @@ export const DictionaryPopover = ({
             <div className="popover-loading">
               <Loader2 className="animate-spin" size={18} />
               <span>Looking up translation & context...</span>
+            </div>
+          ) : notFound ? (
+            <div className="popover-not-found">
+              <span>この単語の意味を見つけられませんでした。</span>
+              <p>通信環境をご確認のうえ、もう一度お試しください。</p>
             </div>
           ) : (
             <>
