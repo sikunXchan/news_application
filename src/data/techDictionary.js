@@ -127,7 +127,40 @@ export const techDictionary = {
   'paradigm': { word: 'paradigm', phonetic: '/ˈpær.ə.daɪm/', partOfSpeech: 'noun', meaning: 'パラダイム、枠組み、概念的枠組み', techContext: 'プログラミングや設計の根本的な考え方（OOP, FP, Declarative）。', example: 'React introduced a declarative component paradigm.' },
   'benchmark': { word: 'benchmark', phonetic: '/ˈbentʃ.mɑːk/', partOfSpeech: 'noun / verb', meaning: 'ベンチマーク、性能指標', techContext: 'ハードやソフトの性能を客観的に比較測定するテスト。', example: 'The benchmark measured query throughput and latency.' },
   'consensus': { word: 'consensus', phonetic: '/kənˈsen.səs/', partOfSpeech: 'noun', meaning: '合意、合意形成', techContext: '分散システムでノード間の一貫性を保証する合意アルゴリズム（Raft, Paxos）。', example: 'Raft consensus ensures consistent state across replicas.' },
-  'intractable': { word: 'intractable', phonetic: '/ɪnˈtræk.tə.bəl/', partOfSpeech: 'adjective', meaning: '計算量的に解けない、手に負えない', techContext: '現在のコンピュータや量子マシンでも多項式時間で解けない計算困難な数学問題。', example: 'Lattice cryptography relies on computationally intractable problems.' }
+  'intractable': { word: 'intractable', phonetic: '/ɪnˈtræk.tə.bəl/', partOfSpeech: 'adjective', meaning: '計算量的に解けない、手に負えない', techContext: '現在のコンピュータや量子マシンでも多項式時間で解けない計算困難な数学問題。', example: 'Lattice cryptography relies on computationally intractable problems.' },
+
+  // Common general English vocabulary that frequently appears in the
+  // connecting prose of news articles, not just in tech jargon. The online
+  // lookup fallback can be unreliable, so these everyday words are covered
+  // offline too.
+  'profound': { word: 'profound', phonetic: '/prəˈfaʊnd/', partOfSpeech: 'adjective', meaning: '深遠な、重大な', techContext: '影響や変化が非常に深く重要であることを表す。', example: 'The update has a profound impact on developer workflows.' },
+  'landscape': { word: 'landscape', phonetic: '/ˈlænd.skeɪp/', partOfSpeech: 'noun', meaning: '状況、業界の全体像', techContext: '業界や技術分野全体の状況を指す比喩表現（e.g. "the tech landscape"）。', example: 'The competitive landscape is shifting toward AI-first products.' },
+  'transformation': { word: 'transformation', phonetic: '/ˌtræns.fərˈmeɪ.ʃən/', partOfSpeech: 'noun', meaning: '変革、変容', techContext: 'システムや業界の根本的な変化（digital transformation）。', example: 'Cloud adoption drove a major transformation in IT operations.' },
+  'undergo': { word: 'undergo', phonetic: '/ˌʌn.dəˈɡəʊ/', partOfSpeech: 'verb', meaning: '経験する、被る', techContext: '変化やプロセスを経ること。', example: 'The platform will undergo a major architecture overhaul.' },
+  'undergoing': { word: 'undergoing', phonetic: '/ˌʌn.dəˈɡəʊ.ɪŋ/', partOfSpeech: 'verb', meaning: '経験している最中', techContext: '変化やプロセスを現在進行形で経ていること。', example: 'The industry is undergoing rapid consolidation.' },
+  'increasing': { word: 'increasing', phonetic: '/ɪnˈkriː.sɪŋ/', partOfSpeech: 'adjective / verb', meaning: '増加している', techContext: '需要やトラフィックなどが増え続けている状態。', example: 'Increasing demand pushed the team to scale infrastructure.' },
+  'complexity': { word: 'complexity', phonetic: '/kəmˈplek.sə.ti/', partOfSpeech: 'noun', meaning: '複雑さ', techContext: 'システムやコードの複雑さの度合い（time complexity, cyclomatic complexity）。', example: 'Microservices can add operational complexity.' },
+  'driven': { word: 'driven', phonetic: '/ˈdrɪv.ən/', partOfSpeech: 'adjective', meaning: '駆動された、動機づけられた', techContext: 'データや目標によって動かされている様子（data-driven）。', example: 'Data-driven decisions rely on accurate analytics.' },
+  'sophisticated': { word: 'sophisticated', phonetic: '/səˈfɪs.tɪ.keɪ.tɪd/', partOfSpeech: 'adjective', meaning: '洗練された、高度な', techContext: '技術的に高度で精巧な設計や攻撃手法を指す。', example: 'Attackers used a sophisticated phishing technique.' },
+  'subtle': { word: 'subtle', phonetic: '/ˈsʌt.əl/', partOfSpeech: 'adjective', meaning: '微妙な、繊細な', techContext: '見つけにくいバグや違いを表す（subtle bug）。', example: 'A subtle race condition caused intermittent failures.' },
+  'crucial': { word: 'crucial', phonetic: '/ˈkruː.ʃəl/', partOfSpeech: 'adjective', meaning: '極めて重要な', techContext: '成功や安全性にとって欠かせない要素。', example: 'Input validation is crucial for security.' },
+  'unprecedented': { word: 'unprecedented', phonetic: '/ʌnˈpres.ɪ.den.tɪd/', partOfSpeech: 'adjective', meaning: '前例のない', techContext: 'これまでにない規模や速さを表す。', example: 'The model achieved unprecedented accuracy on the benchmark.' },
+  'ecosystem': { word: 'ecosystem', phonetic: '/ˈiː.kəʊ.sɪs.təm/', partOfSpeech: 'noun', meaning: 'エコシステム、生態系', techContext: 'ツールやサービスが相互に連携し合う技術圏を指す比喩表現。', example: 'The open-source ecosystem accelerates innovation.' },
+  'robust': { word: 'robust', phonetic: '/rəʊˈbʌst/', partOfSpeech: 'adjective', meaning: '堅牢な、頑丈な', techContext: '障害に強く安定して動作するシステムを指す。', example: 'Build a robust error-handling strategy.' },
+  'seamless': { word: 'seamless', phonetic: '/ˈsiːm.ləs/', partOfSpeech: 'adjective', meaning: 'シームレスな、継ぎ目のない', techContext: 'ユーザーが違和感なく利用できる滑らかな体験。', example: 'The migration provided a seamless user experience.' },
+  'comprehensive': { word: 'comprehensive', phonetic: '/ˌkɒm.prɪˈhen.sɪv/', partOfSpeech: 'adjective', meaning: '包括的な', techContext: '抜け漏れのない網羅的な対応やテストを指す。', example: 'The team ran a comprehensive security audit.' },
+  'significant': { word: 'significant', phonetic: '/sɪɡˈnɪf.ɪ.kənt/', partOfSpeech: 'adjective', meaning: '重要な、重大な', techContext: '無視できないほど大きな影響や差を表す。', example: 'The update brought significant performance gains.' },
+  'substantial': { word: 'substantial', phonetic: '/səbˈstæn.ʃəl/', partOfSpeech: 'adjective', meaning: '相当な、実質的な', techContext: '量や規模が大きいことを表す。', example: 'Caching led to a substantial reduction in load times.' },
+  'emerging': { word: 'emerging', phonetic: '/iˈmɜː.dʒɪŋ/', partOfSpeech: 'adjective', meaning: '新興の、台頭しつつある', techContext: '最近登場し急速に成長している技術や市場を指す。', example: 'Emerging markets are adopting mobile-first platforms.' },
+  'innovative': { word: 'innovative', phonetic: '/ˈɪn.ə.və.tɪv/', partOfSpeech: 'adjective', meaning: '革新的な', techContext: '新しい発想で問題を解決するアプローチを指す。', example: 'The startup built an innovative caching layer.' },
+  'dramatically': { word: 'dramatically', phonetic: '/drəˈmæt.ɪ.kəl.i/', partOfSpeech: 'adverb', meaning: '劇的に', techContext: '数値や性能が大きく変化したことを強調する副詞。', example: 'Latency dropped dramatically after the optimization.' },
+  'fundamentally': { word: 'fundamentally', phonetic: '/ˌfʌn.dəˈmen.təl.i/', partOfSpeech: 'adverb', meaning: '根本的に', techContext: '設計思想やアーキテクチャの本質的な変化を表す。', example: 'The new API fundamentally changes how clients authenticate.' },
+  'ultimately': { word: 'ultimately', phonetic: '/ˈʌl.tɪ.mət.li/', partOfSpeech: 'adverb', meaning: '最終的に', techContext: '一連の変化やプロセスの結論を導く際に使う。', example: 'Ultimately, the team chose a serverless architecture.' },
+  'consequently': { word: 'consequently', phonetic: '/ˈkɒn.sɪ.kwənt.li/', partOfSpeech: 'adverb', meaning: '結果として', techContext: '前述の原因から導かれる結果を示す接続副詞。', example: 'The cache was misconfigured; consequently, requests timed out.' },
+  'nevertheless': { word: 'nevertheless', phonetic: '/ˌnev.ə.ðəˈles/', partOfSpeech: 'adverb', meaning: 'それにもかかわらず', techContext: '前述の内容と対比する接続副詞。', example: 'The API is deprecated; nevertheless, many services still use it.' },
+  'notably': { word: 'notably', phonetic: '/ˈnəʊ.tə.bli/', partOfSpeech: 'adverb', meaning: '特に、顕著に', techContext: '特筆すべき点を強調する際に使う。', example: 'Performance improved, notably on mobile devices.' },
+  'remarkably': { word: 'remarkably', phonetic: '/rɪˈmɑː.kə.bli/', partOfSpeech: 'adverb', meaning: '著しく、驚くほど', techContext: '予想以上の変化や結果を強調する副詞。', example: 'The new model runs remarkably fast on edge devices.' },
+  'meticulous': { word: 'meticulous', phonetic: '/məˈtɪk.jʊ.ləs/', partOfSpeech: 'adjective', meaning: '細心の、几帳面な', techContext: '細部まで注意深く配慮する様子。', example: 'Meticulous code review catches subtle bugs early.' }
 };
 
 export function cleanWord(raw) {
@@ -178,7 +211,10 @@ export function lookupDictionary(rawWord) {
 }
 
 /**
- * Fast online definition & Japanese translation with strict 2.0s timeout.
+ * Fast online definition & Japanese translation with a 6.0s timeout. A
+ * tighter timeout (previously 2.0s) was aborting both lookups before slower
+ * mobile connections could get a response, producing spurious "not found"
+ * results even for common words the APIs do have definitions for.
  */
 export async function fetchOnlineDefinition(rawWord) {
   const word = cleanWord(rawWord);
@@ -189,7 +225,7 @@ export async function fetchOnlineDefinition(rawWord) {
   }
 
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 2000);
+  const timeoutId = setTimeout(() => controller.abort(), 6000);
 
   try {
     // Parallel fetch: English dictionary + Japanese translation
