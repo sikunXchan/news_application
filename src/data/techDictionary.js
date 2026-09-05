@@ -13,6 +13,8 @@ export const techDictionary = {
   'app': { word: 'app', phonetic: '/æp/', partOfSpeech: 'noun', meaning: 'アプリ、アプリケーション', techContext: 'ユーザー向けのソフトウェア。', example: 'The mobile app is built with React Native.' },
   'application': { word: 'application', phonetic: '/ˌæp.lɪˈkeɪ.ʃən/', partOfSpeech: 'noun', meaning: 'アプリケーション、適用', techContext: 'ソフトウェアプログラム全体。', example: 'Modern web applications use SPAs.' },
   'applications': { word: 'applications', phonetic: '/ˌæp.lɪˈkeɪ.ʃənz/', partOfSpeech: 'noun', meaning: 'アプリケーション群', techContext: '複数のアプリ。', example: 'Enterprise applications require strict security.' },
+  'distributed': { word: 'distributed', phonetic: '/dɪˈstrɪb.jə.tɪd/', partOfSpeech: 'adjective', meaning: '分散型の、分散された', techContext: '複数のサーバーやノードに処理やデータを分散させるシステム設計。', example: 'Distributed systems provide high availability.' },
+  'distribute': { word: 'distribute', phonetic: '/dɪˈstrɪb.juːt/', partOfSpeech: 'verb', meaning: '分散する、配布する', techContext: '負荷やデータを複数の場所に分けること。', example: 'Distribute the load across multiple servers.' },
   
   // Common Verbs & Actions
   'deploy': { word: 'deploy', phonetic: '/dɪˈplɔɪ/', partOfSpeech: 'verb', meaning: '配備する、展開する、本番環境に反映する', techContext: '開発・テストしたコードやビルド成果物を本番サーバーやクラウド環境に反映して利用可能にすること。', example: 'Deploy the new release to production via CI/CD.' },
@@ -189,7 +191,7 @@ export async function fetchOnlineDefinition(rawWord) {
       signal: controller.signal
     }).then(r => r.ok ? r.json() : null).catch(() => null);
 
-    const transPromise = fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(word)}&langpair=en|ja`, {
+    const transPromise = fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=ja&dt=t&q=${encodeURIComponent(word)}`, {
       signal: controller.signal
     }).then(r => r.ok ? r.json() : null).catch(() => null);
 
@@ -203,21 +205,14 @@ export async function fetchOnlineDefinition(rawWord) {
     const enDef = firstMeaning?.definitions?.[0]?.definition || '';
     const example = firstMeaning?.definitions?.[0]?.example || '';
 
-    // Japanese translated meaning
-    let jaMeaning = transData?.responseData?.translatedText;
+    // Japanese translated meaning from Google Translate
+    let jaMeaning = '';
+    if (transData && transData[0] && transData[0][0] && transData[0][0][0]) {
+      jaMeaning = transData[0][0][0];
+    }
     
-    // Heuristic to detect bad single-word translations from MyMemory (like 'の切り分けは')
-    const isBadTranslation = !jaMeaning || 
-                             jaMeaning.toLowerCase() === word.toLowerCase() || 
-                             jaMeaning.startsWith('MYMEMORY') ||
-                             jaMeaning.endsWith('は') || 
-                             jaMeaning.endsWith('が') || 
-                             jaMeaning.endsWith('を') ||
-                             jaMeaning.endsWith('に') ||
-                             jaMeaning.includes(' ') ||
-                             jaMeaning.length > 20;
-
-    if (isBadTranslation) {
+    // If translation failed or returned the exact same English word
+    if (!jaMeaning || jaMeaning.toLowerCase() === word.toLowerCase()) {
       if (enDef) {
         jaMeaning = `[英英] ${enDef}`;
       } else {
