@@ -1,6 +1,19 @@
-﻿// Ultra-Fast Built-in Tech & English Dictionary with 0ms Offline Hits & Multi-source Online Fallback
+// Ultra-Fast Built-in Tech & English Dictionary with 0ms Offline Hits & Multi-source Online Fallback
 
 export const techDictionary = {
+  'function': { word: 'function', phonetic: '/ˈfʌŋk.ʃən/', partOfSpeech: 'noun / verb', meaning: '関数、機能、機能する', techContext: '入力を受け取って出力を返す再利用可能なコードブロック。', example: 'Arrow functions provide a concise syntax.' },
+  'functions': { word: 'functions', phonetic: '/ˈfʌŋk.ʃənz/', partOfSpeech: 'noun / verb', meaning: '関数群、機能', techContext: '複数の機能やサーバーレス関数。', example: 'Serverless functions scale automatically.' },
+  'feature': { word: 'feature', phonetic: '/ˈfiː.tʃər/', partOfSpeech: 'noun', meaning: '機能、特徴', techContext: 'ソフトウェアの新しい機能や特性。', example: 'The team shipped a new authentication feature.' },
+  'features': { word: 'features', phonetic: '/ˈfiː.tʃərz/', partOfSpeech: 'noun', meaning: '機能群、特徴', techContext: 'アプリの機能一覧など。', example: 'It comes with many built-in features.' },
+  'system': { word: 'system', phonetic: '/ˈsɪs.təm/', partOfSpeech: 'noun', meaning: 'システム、体系', techContext: '相互に作用する要素の集合体。', example: 'The operating system manages memory.' },
+  'systems': { word: 'systems', phonetic: '/ˈsɪs.təmz/', partOfSpeech: 'noun', meaning: 'システム群', techContext: '分散システムなど。', example: 'Distributed systems are hard to debug.' },
+  'data': { word: 'data', phonetic: '/ˈdeɪ.tə/', partOfSpeech: 'noun', meaning: 'データ、情報', techContext: '処理・保存される情報。', example: 'Data fetching is optimized via caching.' },
+  'user': { word: 'user', phonetic: '/ˈjuː.zər/', partOfSpeech: 'noun', meaning: 'ユーザー、利用者', techContext: 'システムやアプリを利用する人。', example: 'User authentication is required.' },
+  'users': { word: 'users', phonetic: '/ˈjuː.zərz/', partOfSpeech: 'noun', meaning: 'ユーザー群', techContext: '複数の利用者。', example: 'Active users increased by 20%.' },
+  'app': { word: 'app', phonetic: '/æp/', partOfSpeech: 'noun', meaning: 'アプリ、アプリケーション', techContext: 'ユーザー向けのソフトウェア。', example: 'The mobile app is built with React Native.' },
+  'application': { word: 'application', phonetic: '/ˌæp.lɪˈkeɪ.ʃən/', partOfSpeech: 'noun', meaning: 'アプリケーション、適用', techContext: 'ソフトウェアプログラム全体。', example: 'Modern web applications use SPAs.' },
+  'applications': { word: 'applications', phonetic: '/ˌæp.lɪˈkeɪ.ʃənz/', partOfSpeech: 'noun', meaning: 'アプリケーション群', techContext: '複数のアプリ。', example: 'Enterprise applications require strict security.' },
+  
   // Common Verbs & Actions
   'deploy': { word: 'deploy', phonetic: '/dɪˈplɔɪ/', partOfSpeech: 'verb', meaning: '配備する、展開する、本番環境に反映する', techContext: '開発・テストしたコードやビルド成果物を本番サーバーやクラウド環境に反映して利用可能にすること。', example: 'Deploy the new release to production via CI/CD.' },
   'deploys': { word: 'deploys', phonetic: '/dɪˈplɔɪz/', partOfSpeech: 'verb', meaning: '配備する、展開する（3人称単数）', techContext: 'システムやコードを自動展開すること。', example: 'The agent deploys the microservice autonomously.' },
@@ -192,8 +205,24 @@ export async function fetchOnlineDefinition(rawWord) {
 
     // Japanese translated meaning
     let jaMeaning = transData?.responseData?.translatedText;
-    if (!jaMeaning || jaMeaning.toLowerCase() === word.toLowerCase() || jaMeaning.startsWith('MYMEMORY')) {
-      jaMeaning = enDef || `${word}（英語の語彙・用語）`;
+    
+    // Heuristic to detect bad single-word translations from MyMemory (like 'の切り分けは')
+    const isBadTranslation = !jaMeaning || 
+                             jaMeaning.toLowerCase() === word.toLowerCase() || 
+                             jaMeaning.startsWith('MYMEMORY') ||
+                             jaMeaning.endsWith('は') || 
+                             jaMeaning.endsWith('が') || 
+                             jaMeaning.endsWith('を') ||
+                             jaMeaning.endsWith('に') ||
+                             jaMeaning.includes(' ') ||
+                             jaMeaning.length > 20;
+
+    if (isBadTranslation) {
+      if (enDef) {
+        jaMeaning = `[英英] ${enDef}`;
+      } else {
+        jaMeaning = `${word}（英語の語彙・用語）`;
+      }
     }
 
     const result = {
