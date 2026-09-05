@@ -1,131 +1,285 @@
-import React, { useState, useEffect } from 'react';
-import { Search, Settings, Sparkles, BrainCircuit, User } from 'lucide-react';
+﻿import React, { useState, useEffect } from 'react';
+import { 
+  Terminal, Sparkles, SlidersHorizontal, BookOpen, 
+  BookmarkCheck, Search, Info, HelpCircle 
+} from 'lucide-react';
 import dailyNewsData from './dailyNews.json';
+import { Header } from './components/Header';
+import { NewsCard } from './components/NewsCard';
+import { DictionaryPopover } from './components/DictionaryPopover';
+import { ArticleReaderModal } from './components/ArticleReaderModal';
+import { WordbookModal } from './components/WordbookModal';
+import { cleanWord } from './data/techDictionary';
 import './index.css';
 
-// Manual category setup since mockData is being removed
+// Tech-focused categories
 const categories = [
-  { id: 'all', label: 'All' },
-  { id: 'tech', label: 'Technology' },
-  { id: 'business', label: 'Business' },
-  { id: 'world', label: 'World' },
-  { id: 'science', label: 'Science' },
-  { id: 'entertainment', label: 'Entertainment' },
-  { id: 'it-learning', label: 'IT Learning' },
+  { id: 'all', label: 'All Stories' },
+  { id: 'ai', label: 'AI & Machine Learning' },
+  { id: 'web', label: 'Web & Frontend' },
+  { id: 'cloud', label: 'Cloud & Backend' },
+  { id: 'devops', label: 'DevOps & Systems' },
+  { id: 'security', label: 'Cybersecurity' },
+  { id: 'career', label: 'Career & Open Source' },
 ];
 
-const NewsCard = ({ news, index }) => {
-  const [isEli5, setIsEli5] = useState(false);
-  const summaryToDisplay = isEli5 && news.eli5Summary ? news.eli5Summary : news.summary;
-  const getImageForVibe = (vibe) => {
-    if (vibe === 'positive') return '/positive_news_dog.jpg';
-    if (vibe === 'negative' || vibe === 'alert') return '/negative_news_dog.jpg';
-    return '/neutral_news_dog.jpg';
+export const App = () => {
+  const [activeCategory, setActiveCategory] = useState('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedLevel, setSelectedLevel] = useState('all'); // 'all' | 'beginner' | 'intermediate' | 'advanced'
+  const [isDarkMode, setIsDarkMode] = useState(true);
+
+  // Modals and Popover states
+  const [popoverWord, setPopoverWord] = useState(null);
+  const [popoverAnchor, setPopoverAnchor] = useState(null);
+  const [activeReaderNews, setActiveReaderNews] = useState(null);
+  const [isWordbookOpen, setIsWordbookOpen] = useState(false);
+
+  // Wordbook stored in LocalStorage
+  const [wordbook, setWordbook] = useState(() => {
+    try {
+      const saved = localStorage.getItem('techlingua_wordbook');
+      return saved ? JSON.parse(saved) : [
+        {
+          word: "orchestration",
+          phonetic: "/ˌɔː.kɪˈstreɪ.ʃən/",
+          partOfSpeech: "noun",
+          meaning: "統合管理、オーケストレーション",
+          techContext: "複数のコンテナやマイクロサービスの自動デプロイ・スケーリング管理（Kubernetes）。",
+          example: "Kubernetes orchestrates Docker containers across cloud clusters.",
+          isMastered: false,
+          savedAt: new Date().toISOString()
+        },
+        {
+          word: "hydrate",
+          phonetic: "/ˈhaɪ.dreɪt/",
+          partOfSpeech: "verb",
+          meaning: "水和させる、ハイドレーションする",
+          techContext: "SSR（サーバーレンダリング）されたHTMLにクライアント側でJSイベントを結合する処理。",
+          example: "React hydrates the initial HTML snapshot in the browser.",
+          isMastered: true,
+          savedAt: new Date().toISOString()
+        }
+      ];
+    } catch {
+      return [];
+    }
+  });
+
+  // Save wordbook to LocalStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem('techlingua_wordbook', JSON.stringify(wordbook));
+    } catch (e) {
+      console.warn("Failed to persist wordbook", e);
+    }
+  }, [wordbook]);
+
+  // Apply dark/light class to root element
+  useEffect(() => {
+    if (isDarkMode) {
+      document.documentElement.classList.add('dark');
+      document.documentElement.classList.remove('light');
+    } else {
+      document.documentElement.classList.add('light');
+      document.documentElement.classList.remove('dark');
+    }
+  }, [isDarkMode]);
+
+  // Handle word selection from long press or click
+  const handleWordSelected = (word, rect) => {
+    const clean = cleanWord(word);
+    if (!clean) return;
+    setPopoverWord(clean);
+    setPopoverAnchor(rect);
   };
 
-  const imageSrc = getImageForVibe(news.vibe);
+  // Close popover
+  const handleClosePopover = () => {
+    setPopoverWord(null);
+    setPopoverAnchor(null);
+  };
+
+  // Toggle word in wordbook (Add / Remove)
+  const handleToggleWordbook = (wordObj) => {
+    const clean = cleanWord(wordObj.word);
+    const existingIndex = wordbook.findIndex(item => cleanWord(item.word) === clean);
+
+    if (existingIndex >= 0) {
+      setWordbook(wordbook.filter((_, idx) => idx !== existingIndex));
+    } else {
+      setWordbook([
+        {
+          ...wordObj,
+          isMastered: false,
+          savedAt: new Date().toISOString()
+        },
+        ...wordbook
+      ]);
+    }
+  };
+
+  const handleRemoveWord = (word) => {
+    const clean = cleanWord(word);
+    setWordbook(wordbook.filter(w => cleanWord(w.word) !== clean));
+  };
+
+  const handleUpdateWordStatus = (word, isMastered) => {
+    const clean = cleanWord(word);
+    setWordbook(wordbook.map(w => {
+      if (cleanWord(w.word) === clean) {
+        return { ...w, isMastered };
+      }
+      return w;
+    }));
+  };
+
+  // Filter news items
+  const filteredNews = dailyNewsData.filter(item => {
+    // Category filter
+    if (activeCategory !== 'all' && item.category !== activeCategory) {
+      return false;
+    }
+    // Level filter
+    if (selectedLevel !== 'all' && item.level?.toLowerCase() !== selectedLevel) {
+      return false;
+    }
+    // Search query filter
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      const inTitle = item.title.toLowerCase().includes(q);
+      const inSummary = item.summary.some(s => s.toLowerCase().includes(q));
+      const inTags = item.tags?.some(t => t.toLowerCase().includes(q));
+      const inVocab = item.keyVocabulary?.some(v => v.word.toLowerCase().includes(q) || v.meaning.toLowerCase().includes(q));
+      if (!inTitle && !inSummary && !inTags && !inVocab) {
+        return false;
+      }
+    }
+    return true;
+  });
 
   return (
-    <article className="news-card" style={{ animationDelay: `${index * 0.1}s` }}>
-      <div className="card-image-container">
-        <img src={imageSrc} alt={news.title} className="card-image" />
-        <div className="vibe-overlay"></div>
-        <div className={`vibe-indicator vibe-${news.vibe}`}>
-          <Sparkles size={12} />
-          {news.vibe}
-        </div>
-      </div>
-      
-      <div className="card-content">
-        <div className="card-meta">
-          <span className="card-source">{news.source}</span>
-          <span className="card-dot"></span>
-          <span>{news.timeAgo}</span>
-          <span className="card-dot"></span>
-          <span>{news.readTime} read</span>
-        </div>
-        
-        <h2 className="card-title">{news.title}</h2>
-        
-        <ul className="summary-list">
-          {summaryToDisplay.map((point, idx) => (
-            <li key={idx} className="summary-item">{point}</li>
-          ))}
-        </ul>
+    <div className={`app-root ${isDarkMode ? 'dark' : 'light'}`}>
+      <div className="app-layout">
+        {/* Main Header */}
+        <Header
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          selectedLevel={selectedLevel}
+          onLevelChange={setSelectedLevel}
+          wordbookCount={wordbook.length}
+          onOpenWordbook={() => setIsWordbookOpen(true)}
+          isDarkMode={isDarkMode}
+          onToggleTheme={() => setIsDarkMode(!isDarkMode)}
+        />
 
-        {news.isComplex && news.eli5Summary && (
-          <button 
-            className={`simplify-button ${isEli5 ? 'active' : ''}`}
-            onClick={() => setIsEli5(!isEli5)}
-          >
-            <BrainCircuit size={16} />
-            {isEli5 ? '戻す' : 'AI解説'}
-          </button>
-        )}
-
-        {news.whyYouShouldCare && (
-          <div className="why-care-block">
-            <User size={14} className="why-care-icon" />
-            <p className="why-care-text">{news.whyYouShouldCare}</p>
+        {/* Learning Hint Banner */}
+        <div className="learning-banner">
+          <div className="banner-content">
+            <Sparkles size={16} className="banner-icon" />
+            <span>
+              💡 <strong>Tech & English Pro Tip:</strong> Long press or tap on any English word to look up its programming context, listen to native pronunciation, and save it to your Wordbook!
+            </span>
           </div>
+        </div>
+
+        {/* Category Navigation Pills */}
+        <nav className="category-scroll-nav">
+          <div className="category-pills-wrap">
+            {categories.map(cat => (
+              <button
+                key={cat.id}
+                className={`category-pill-btn ${activeCategory === cat.id ? 'active' : ''}`}
+                onClick={() => setActiveCategory(cat.id)}
+              >
+                {cat.label}
+              </button>
+            ))}
+          </div>
+        </nav>
+
+        {/* Main News Feed */}
+        <main className="feed-container">
+          {filteredNews.length === 0 ? (
+            <div className="no-results-box">
+              <BookOpen size={48} className="no-results-icon" />
+              <h3>No articles found</h3>
+              <p>Try adjusting your category, difficulty level, or search keyword.</p>
+              <button 
+                className="reset-filters-btn"
+                onClick={() => {
+                  setActiveCategory('all');
+                  setSelectedLevel('all');
+                  setSearchQuery('');
+                }}
+              >
+                Reset All Filters
+              </button>
+            </div>
+          ) : (
+            <div className="feed-grid">
+              {filteredNews.map((news, index) => (
+                <NewsCard
+                  key={news.id}
+                  news={news}
+                  index={index}
+                  onWordSelected={handleWordSelected}
+                  onOpenReader={setActiveReaderNews}
+                  onToggleWordbook={handleToggleWordbook}
+                  wordbook={wordbook}
+                />
+              ))}
+            </div>
+          )}
+        </main>
+
+        {/* Footer */}
+        <footer className="app-footer">
+          <div className="footer-content">
+            <div className="footer-brand">
+              <Terminal size={18} />
+              <span>TechLingua News</span>
+            </div>
+            <p className="footer-desc">
+              Master cutting-edge software engineering and technical English simultaneously.
+            </p>
+          </div>
+        </footer>
+
+        {/* Dictionary Popover */}
+        {popoverWord && (
+          <DictionaryPopover
+            selectedWord={popoverWord}
+            anchorRect={popoverAnchor}
+            onClose={handleClosePopover}
+            wordbook={wordbook}
+            onToggleWordbook={handleToggleWordbook}
+          />
+        )}
+
+        {/* Full Article Reader Modal */}
+        {activeReaderNews && (
+          <ArticleReaderModal
+            news={activeReaderNews}
+            isOpen={!!activeReaderNews}
+            onClose={() => setActiveReaderNews(null)}
+            onWordSelected={handleWordSelected}
+            wordbook={wordbook}
+            onToggleWordbook={handleToggleWordbook}
+          />
+        )}
+
+        {/* Vocabulary Wordbook Modal */}
+        {isWordbookOpen && (
+          <WordbookModal
+            isOpen={isWordbookOpen}
+            onClose={() => setIsWordbookOpen(false)}
+            wordbook={wordbook}
+            onRemoveWord={handleRemoveWord}
+            onUpdateWordStatus={handleUpdateWordStatus}
+          />
         )}
       </div>
-    </article>
-  );
-};
-
-const App = () => {
-  const [activeCategory, setActiveCategory] = useState('all');
-  const [currentDate, setCurrentDate] = useState('');
-  const [dailyFeed, setDailyFeed] = useState([]);
-
-  useEffect(() => {
-    const date = new Date();
-    const options = { weekday: 'long', month: 'long', day: 'numeric' };
-    setCurrentDate(date.toLocaleDateString('en-US', options));
-
-    // Only use the real AI generated, translated JSON
-    setDailyFeed(dailyNewsData);
-  }, []);
-
-  const filteredNews = activeCategory === 'all' 
-    ? dailyFeed 
-    : dailyFeed.filter(n => n.category === activeCategory);
-
-  const totalReadTime = filteredNews.reduce((acc, curr) => {
-    return acc + parseInt(curr.readTime);
-  }, 0);
-
-  return (
-    <div className="app-container">
-      <header className="header">
-        <div className="header-branding">
-          <h1 className="header-title">LILY AI NEWS</h1>
-          <span className="header-date">{currentDate} • {totalReadTime}m total</span>
-        </div>
-        <div className="header-actions">
-          <button className="icon-button"><Search size={22} /></button>
-          <button className="icon-button"><Settings size={22} /></button>
-        </div>
-      </header>
-
-      <nav className="category-nav">
-        {categories.map(cat => (
-          <button
-            key={cat.id}
-            className={`category-pill ${activeCategory === cat.id ? 'active' : ''}`}
-            onClick={() => setActiveCategory(cat.id)}
-          >
-            {cat.label}
-          </button>
-        ))}
-      </nav>
-
-      <main className="news-feed">
-        {filteredNews.map((news, index) => (
-          <NewsCard key={news.id} news={news} index={index} />
-        ))}
-      </main>
     </div>
   );
 };

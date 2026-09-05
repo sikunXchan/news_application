@@ -1,16 +1,53 @@
-# React + Vite
+﻿# TechLingua News (Tech & English Learning Platform)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+> **Master cutting-edge software engineering and technical English simultaneously.**
 
-Currently, two official plugins are available:
+A next-generation tech news and interactive language learning web application designed for developers, programmers, and technology enthusiasts.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 🚀 Key Features
 
-## React Compiler
+1. **Full English Tech Content**:
+   - Covers latest developments in AI & LLMs, Frontend (React 19, Web APIs), Cloud & Backend (Edge KV, Raft), DevOps & Systems (Distroless, K8s), and Cybersecurity (PQC, TLS 1.3).
+   - Difficulty ratings (`Beginner`, `Intermediate`, `Advanced`).
+   - English 3-point key summaries and architectural takeaways with bilingual toggle.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+2. **Interactive Long-Press Smart Dictionary (長押しスマート辞書)**:
+   - **Mobile**: Long-press (400ms) any word in the titles or article text to trigger the dictionary popover with tactile haptic feedback.
+   - **Desktop**: Click, long-press, or select any word to inspect.
+   - **Rich Vocabulary Insights**: Shows phonetic IPA, native pronunciation (TTS), Japanese translation, and **programming/tech-specific context and usage**.
+   - Built-in offline dictionary (1000+ tech terms) + Free Dictionary API fallback.
 
-## Expanding the ESLint configuration
+3. **My Vocabulary Wordbook & Flashcards**:
+   - Bookmark any word directly from news articles.
+   - 3D flip flashcards for SRS memory drills with completion confetti animations.
+   - Filter words by status (`All`, `Learning`, `Mastered`).
+   - Persisted automatically in `localStorage`.
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+4. **Full Reader & Audio Listening (TTS)**:
+   - Distraction-free reader view.
+   - Adjustable speech rate (0.8x, 1.0x, 1.2x) for listening and shadowing practice.
+   - In-depth grammar & technical phrase breakdown.
+   - Multiple-choice comprehension & vocabulary quiz.
+
+5. **Modern SaaS / Developer UI**:
+   - Dark Mode / Light Mode with seamless transitions.
+   - Glassmorphic card design and responsive mobile-first layout.
+
+## 🛠️ Tech Stack
+
+- **Frontend**: React 19, Vite, Lucide Icons, Canvas Confetti
+- **Audio**: Web Speech API (Text-to-Speech)
+- **Data Engine**: RSS Parser, Google GenAI SDK (`@google/genai`)
+
+## 💻 Getting Started
+
+```bash
+# Install dependencies
+npm install
+
+# Start local dev server
+npm run dev
+
+# Build for production
+npm run build
+```
