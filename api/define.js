@@ -59,7 +59,10 @@ export default async function handler(req, res) {
     let jaMeaning = '';
     if (transOutcome.ok) {
       const data = safeParse(transOutcome.text);
-      const translated = data?.responseData?.translatedText || '';
+      // MyMemory sometimes wraps parts of the translation in word-alignment
+      // markup like <g id="1">...</g> — strip that down to plain text.
+      const raw = (data?.responseData?.translatedText || '').replace(/<\/?g[^>]*>/gi, '');
+      const translated = raw.trim();
       // MyMemory echoes the source text back (or an error string) when it
       // has no real translation instead of failing the request outright.
       if (
