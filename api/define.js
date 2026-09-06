@@ -40,15 +40,27 @@ export default async function handler(req, res) {
       controller
     );
 
+    const debug = req.query?.debug === '1';
+    const debugInfo = {
+      dictStatus: dictResult.status,
+      dictHttpStatus: dictResult.status === 'fulfilled' ? dictResult.value.status : null,
+      dictReason: dictResult.status === 'rejected' ? String(dictResult.reason) : null,
+      transStatus: transResult.status,
+      transHttpStatus: transResult.status === 'fulfilled' ? transResult.value.status : null,
+      transReason: transResult.status === 'rejected' ? String(transResult.reason) : null
+    };
+
     let dictItem = null;
     if (dictResult.status === 'fulfilled' && dictResult.value.ok) {
       const data = await dictResult.value.json().catch(() => null);
       dictItem = Array.isArray(data) && data.length > 0 ? data[0] : null;
+      if (debug) debugInfo.dictBody = JSON.stringify(data).slice(0, 500);
     }
 
     let jaMeaning = '';
     if (transResult.status === 'fulfilled' && transResult.value.ok) {
       const data = await transResult.value.json().catch(() => null);
+      if (debug) debugInfo.transBody = JSON.stringify(data).slice(0, 500);
       const translated = data?.responseData?.translatedText || '';
       // MyMemory echoes the source text back (or an error string) when it
       // has no real translation instead of failing the request outright.
@@ -72,7 +84,7 @@ export default async function handler(req, res) {
     }
 
     if (!jaMeaning) {
-      res.status(404).json({ found: false });
+      res.status(404).json(debug ? { found: false, debugInfo } : { found: false });
       return;
     }
 
@@ -86,7 +98,7 @@ export default async function handler(req, res) {
       techContext: `General & Technical English vocabulary: "${word}". Tap audio icon to practice pronunciation.`,
       example: example || `Common usage: "${word}" in technical documentation and news.`
     });
-  } catch {
-    res.status(504).json({ found: false, error: 'timeout' });
+  } catch (e) {
+    res.status(504).json({ found: false, error: 'timeout', message: String(e) });
   }
 }
