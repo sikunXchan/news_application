@@ -211,10 +211,16 @@ export function lookupDictionary(rawWord) {
 }
 
 /**
- * Fast online definition & Japanese translation with a 6.0s timeout. A
- * tighter timeout (previously 2.0s) was aborting both lookups before slower
- * mobile connections could get a response, producing spurious "not found"
- * results even for common words the APIs do have definitions for.
+ * Definition & Japanese translation lookup, backed by our own /api/define
+ * serverless function (see api/define.js) rather than calling third-party
+ * dictionary/translation APIs directly from the browser. Calling them
+ * directly meant depending on those services returning proper CORS headers
+ * to an arbitrary origin — which an unofficial, undocumented endpoint in
+ * particular does not reliably do — and on a real user's mobile connection
+ * completing two cross-origin round trips inside a short client-side
+ * timeout. Routing through our own origin removes the CORS dependency
+ * entirely and lets the lookup run from stable server-side network
+ * conditions instead.
  */
 export async function fetchOnlineDefinition(rawWord) {
   const word = cleanWord(rawWord);
@@ -228,52 +234,23 @@ export async function fetchOnlineDefinition(rawWord) {
   const timeoutId = setTimeout(() => controller.abort(), 6000);
 
   try {
-    // Parallel fetch: English dictionary + Japanese translation
-    const dictPromise = fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(word)}`, {
+    const response = await fetch(`/api/define?word=${encodeURIComponent(word)}`, {
       signal: controller.signal
-    }).then(r => r.ok ? r.json() : null).catch(() => null);
-
-    const transPromise = fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=ja&dt=t&q=${encodeURIComponent(word)}`, {
-      signal: controller.signal
-    }).then(r => r.ok ? r.json() : null).catch(() => null);
-
-    const [dictData, transData] = await Promise.all([dictPromise, transPromise]);
+    });
     clearTimeout(timeoutId);
 
-    const dictItem = Array.isArray(dictData) && dictData.length > 0 ? dictData[0] : null;
-    const phonetic = dictItem?.phonetic || (dictItem?.phonetics && dictItem.phonetics.find(p => p.text)?.text) || '';
-    const firstMeaning = dictItem?.meanings && dictItem.meanings[0];
-    const partOfSpeech = firstMeaning ? firstMeaning.partOfSpeech : 'word';
-    const enDef = firstMeaning?.definitions?.[0]?.definition || '';
-    const example = firstMeaning?.definitions?.[0]?.example || '';
+    if (!response.ok) return null;
 
-    // Japanese translated meaning from Google Translate
-    let jaMeaning = '';
-    if (transData && transData[0] && transData[0][0] && transData[0][0][0]) {
-      jaMeaning = transData[0][0][0];
-    }
-
-    // If translation failed or returned the exact same English word, fall
-    // back to the English definition. If neither source found anything
-    // usable, don't fabricate a placeholder that just echoes the word back
-    // as if it were an answer — report "not found" so the UI can be honest
-    // about it instead of showing a fake definition.
-    if (!jaMeaning || jaMeaning.toLowerCase() === word.toLowerCase()) {
-      if (enDef) {
-        jaMeaning = `[英英] ${enDef}`;
-      } else {
-        memoryCache.set(word, null);
-        return null;
-      }
-    }
+    const data = await response.json().catch(() => null);
+    if (!data?.found) return null;
 
     const result = {
-      word: dictItem?.word || word,
-      phonetic: phonetic,
-      partOfSpeech: partOfSpeech,
-      meaning: jaMeaning,
-      techContext: `General & Technical English vocabulary: "${word}". Tap audio icon to practice pronunciation.`,
-      example: example || `Common usage: "${word}" in technical documentation and news.`
+      word: data.word || word,
+      phonetic: data.phonetic || '',
+      partOfSpeech: data.partOfSpeech || 'word',
+      meaning: data.meaning,
+      techContext: data.techContext || '',
+      example: data.example || ''
     };
 
     memoryCache.set(word, result);
