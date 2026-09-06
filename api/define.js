@@ -9,11 +9,21 @@
 // lookup here instead means the browser only ever talks to our own origin
 // (no CORS involved at all), and outbound requests run from Vercel's
 // network rather than an arbitrary mobile connection.
-const DICTIONARY_TIMEOUT_MS = 5000;
+const DICTIONARY_TIMEOUT_MS = 9000;
 
-function withTimeout(promise, ms, controller) {
+async function timedFetch(url, ms) {
+  const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), ms);
-  return promise.finally(() => clearTimeout(timeoutId));
+  const start = Date.now();
+  try {
+    const response = await fetch(url, { signal: controller.signal });
+    const text = await response.text().catch(() => '');
+    return { ok: response.ok, status: response.status, text, ms: Date.now() - start };
+  } catch (e) {
+    return { ok: false, status: null, error: String(e), ms: Date.now() - start };
+  } finally {
+    clearTimeout(timeoutId);
+  }
 }
 
 export default async function handler(req, res) {
@@ -24,43 +34,31 @@ export default async function handler(req, res) {
     return;
   }
 
-  const controller = new AbortController();
-
   try {
-    const [dictResult, transResult] = await withTimeout(
-      Promise.allSettled([
-        fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(word)}`, {
-          signal: controller.signal
-        }),
-        fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(word)}&langpair=en|ja`, {
-          signal: controller.signal
-        })
-      ]),
-      DICTIONARY_TIMEOUT_MS,
-      controller
-    );
+    const [dictOutcome, transOutcome] = await Promise.all([
+      timedFetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(word)}`, DICTIONARY_TIMEOUT_MS),
+      timedFetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(word)}&langpair=en|ja`, DICTIONARY_TIMEOUT_MS)
+    ]);
 
     const debug = req.query?.debug === '1';
     const debugInfo = {
-      dictStatus: dictResult.status,
-      dictHttpStatus: dictResult.status === 'fulfilled' ? dictResult.value.status : null,
-      dictReason: dictResult.status === 'rejected' ? String(dictResult.reason) : null,
-      transStatus: transResult.status,
-      transHttpStatus: transResult.status === 'fulfilled' ? transResult.value.status : null,
-      transReason: transResult.status === 'rejected' ? String(transResult.reason) : null
+      dict: { ok: dictOutcome.ok, status: dictOutcome.status, ms: dictOutcome.ms, error: dictOutcome.error || null, body: (dictOutcome.text || '').slice(0, 500) },
+      trans: { ok: transOutcome.ok, status: transOutcome.status, ms: transOutcome.ms, error: transOutcome.error || null, body: (transOutcome.text || '').slice(0, 500) }
+    };
+
+    const safeParse = (text) => {
+      try { return JSON.parse(text || 'null'); } catch { return null; }
     };
 
     let dictItem = null;
-    if (dictResult.status === 'fulfilled' && dictResult.value.ok) {
-      const data = await dictResult.value.json().catch(() => null);
+    if (dictOutcome.ok) {
+      const data = safeParse(dictOutcome.text);
       dictItem = Array.isArray(data) && data.length > 0 ? data[0] : null;
-      if (debug) debugInfo.dictBody = JSON.stringify(data).slice(0, 500);
     }
 
     let jaMeaning = '';
-    if (transResult.status === 'fulfilled' && transResult.value.ok) {
-      const data = await transResult.value.json().catch(() => null);
-      if (debug) debugInfo.transBody = JSON.stringify(data).slice(0, 500);
+    if (transOutcome.ok) {
+      const data = safeParse(transOutcome.text);
       const translated = data?.responseData?.translatedText || '';
       // MyMemory echoes the source text back (or an error string) when it
       // has no real translation instead of failing the request outright.
