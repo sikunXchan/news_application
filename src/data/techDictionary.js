@@ -231,7 +231,10 @@ export async function fetchOnlineDefinition(rawWord) {
   }
 
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 6000);
+  // Must comfortably exceed /api/define's own upstream timeout (see
+  // DICTIONARY_TIMEOUT_MS in api/define.js) — otherwise the client gives up
+  // and reports "not found" before the server even finishes responding.
+  const timeoutId = setTimeout(() => controller.abort(), 12000);
 
   try {
     const response = await fetch(`/api/define?word=${encodeURIComponent(word)}`, {
